@@ -1249,7 +1249,15 @@ class Data(object):
 
 _horovod_is_initialized = False
 
-def init_horovod():
+def get_subcluster(size=1):
+  from mpi4py import MPI
+  comm = MPI.COMM_WORLD
+  begin = size * (comm.Get_rank()//size)
+  end = begin + size
+  return [i for i in range(begin, end)]
+
+
+def init_horovod(subcluster_size=1):
   """
   Initializes Horovod.
   Provide this here such that we can remember whether we already initialized before.
@@ -1259,7 +1267,7 @@ def init_horovod():
     return
   import socket
   import horovod.tensorflow as hvd
-  hvd.init()
+  hvd.init(get_subcluster(subcluster_size), keep_global=True)
   print(
     "Horovod initialized. Hostname %s, pid %i, rank %i / size %i, local rank %i / local size %i." % (
       socket.gethostname(), os.getpid(), hvd.rank(), hvd.size(), hvd.local_rank(), hvd.local_size()))

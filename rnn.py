@@ -309,7 +309,7 @@ def initBackendEngine():
     if config.is_true("use_horovod"):
       import horovod.tensorflow as hvd
       from TFUtil import init_horovod
-      init_horovod()  # make sure it is initialized
+      init_horovod(config.int("subcluster_size", 1))  # make sure it is initialized
       if "gpu" in config.value("device", "") or os.environ.get("CUDA_VISIBLE_DEVICES", ""):
         # We assume that we want to use a GPU.
         gpu_opts = config.typed_dict.setdefault("tf_session_opts", {}).setdefault("gpu_options", {})

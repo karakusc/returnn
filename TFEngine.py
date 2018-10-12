@@ -109,7 +109,7 @@ class Runner(object):
       from TFUtil import global_tensor
       import horovod.tensorflow as hvd
       return global_tensor(
-        lambda: hvd.allreduce(x, average=average),
+        lambda: hvd.allreduce(x, average=average, global_op=True),
         name="fetch_reduce_sum__" + name.replace(":", "__").replace("/", "_"))
 
     def inv_reduce_sum(x, name):
@@ -428,13 +428,13 @@ class Runner(object):
       lambda: tf.placeholder(tf.int32, shape=(), name="horovod_have_more_data_placeholder"),
       name="horovod_have_more_data_placeholder")  # 0 or 1
     sum_have_data_t = global_tensor(
-      lambda: hvd.allreduce(have_more_data_placeholder, average=False),
+      lambda: hvd.allreduce(have_more_data_placeholder, average=False, global_op=True),
       name="horovod_sum_have_data")  # 0..size
     have_error_placeholder = global_tensor(
       lambda: tf.placeholder(tf.int32, shape=(), name="horovod_have_error_placeholder"),
       name="horovod_have_error_placeholder")  # 0 or 1
     sum_have_error_t = global_tensor(
-      lambda: hvd.allreduce(have_error_placeholder, average=False),
+      lambda: hvd.allreduce(have_error_placeholder, average=False, global_op=True),
       name="horovod_sum_have_error")  # 0..size
     sum_have_data, sum_have_error = self.engine.tf_session.run(
       (sum_have_data_t, sum_have_error_t),
@@ -1062,7 +1062,7 @@ class Engine(object):
       import horovod.tensorflow as hvd
       # like hvd.broadcast_global_variables but selected vars only:
       bcast_op = tf.group(*[
-        tf.assign(var, hvd.broadcast(var, root_rank=0))
+        tf.assign(var, hvd.broadcast(var, root_rank=0, global_op=True))
         for var in self.network.get_params_list() + self.network.get_auxiliary_params()])
       self.tf_session.run(bcast_op)
 

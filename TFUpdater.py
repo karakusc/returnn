@@ -9,6 +9,8 @@ from Log import log
 from TFNetwork import TFNetwork
 from TFUtil import tf_version_tuple, assert_min_tf_version, CustomUpdate, add_check_numerics_ops
 
+from BMUFOptimizer import BMUFOptimizer
+
 _OptimizerClassesDict = {}  # type: dict[str,()->Optimizer]
 
 
@@ -214,7 +216,15 @@ class Updater(object):
     else:
       print("Create SGD optimizer.", file=log.v2)
       optimizer = tf.train.GradientDescentOptimizer(learning_rate=lr, use_locking=use_locking)
-    self.optimizer = optimizer
+
+    if self.config.bool("use_bmuf", False): 
+      bmuf_every = self.config.int("bmuf_every", 8)
+      block_momentum = self.config.float("block_momentum", 0.9)
+      block_lr = self.config.float("block_lr", 1.0)
+      self.optimizer = BMUFOptimizer(optimizer, bmuf_every, block_momentum, block_lr)
+    else:
+      self.optimizer = optimizer
+
     self.reset_optim_op()
 
   def _get_apply_grads_op(self, loss, trainable_vars_for_gradients):

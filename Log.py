@@ -120,7 +120,7 @@ class Log:
     if config.is_true("use_horovod"):
       import horovod.tensorflow as hvd
       from TFUtil import init_horovod
-      init_horovod()  # make sure it is initialized
+      init_horovod(config.int("subcluster_size", 1))  # make sure it is initialized
       new_logs = []
       for fn in logs:
         fn_prefix, fn_ext = os.path.splitext(fn)
