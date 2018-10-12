@@ -27,13 +27,13 @@ class BMUFOptimizer(tf.train.Optimizer):
               colocate_gradients_with_ops, grad_loss)
 
   def _apply_gradients_block_end(self, grads_and_vars, global_step, name):
-    apply_grad = self._opt.apply_gradients(self._grads_and_vars, self._global_step, self._name)
+    apply_grad = self._opt.apply_gradients(grads_and_vars, global_step, name)
     assigns = []
     with tf.control_dependencies([apply_grad]):
       from horovod.tensorflow import allreduce, size
       if size() > 1:
         with tf.name_scope("bmuf"):
-          for grad, var in self._grads_and_vars:
+          for grad, var in grads_and_vars:
             if grad is not None:
               var_avg = allreduce(var, global_op=True)
 
