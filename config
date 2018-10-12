@@ -1,7 +1,0 @@
-
-use_bmuf = True
-subcluster_size = 2
-bmuf_every = 8
-block_momentum = 0.9
-block_lr = 1.0
-
