@@ -14,9 +14,8 @@ class BMUFOptimizer(tf.train.Optimizer):
     super(BMUFOptimizer, self).__init__(name=name, use_locking=use_locking)
 
   def apply_gradients(self, grads_and_vars, global_step=None, name='apply_gradients'):
-    import horovod.tensorflow as hvd
     must_apply_bmuf = tf.equal(tf.mod(global_step, self._bmuf_every), tf.constant(0, dtype=tf.int64))
-    in_block_op = self._opt.apply_gradients(self._grads_and_vars, self._global_step, self._name)
+    in_block_op = self._opt.apply_gradients(grads_and_vars, global_step, name)
     block_end_op = _apply_gradients_block_end(grads_and_vars, global_step, name)
     op = tf.cond(must_apply_bmuf, true_fn=block_end_op, false_fn=in_block_op)
     return op
@@ -37,8 +36,8 @@ class BMUFOptimizer(tf.train.Optimizer):
             if grad is not None:
               var_avg = allreduce(var, global_op=True)
 
-              prev_weight = self._opt._get_or_make_slot(var, var.initialized_value(), 'prev_weight', self._name)
-              prev_weight_g = self._opt._get_or_make_slot(var, var.initialized_value(), 'prev_weight_g', self._name)
+              prev_weight = self._opt._get_or_make_slot(var, var.initialized_value(), 'prev_weight', name)
+              prev_weight_g = self._opt._get_or_make_slot(var, var.initialized_value(), 'prev_weight_g', name)
               prev_delta = self._opt._zeros_slot(var, "prev_delta", self._name)
 
               G_t = var_avg - prev_weight_g
